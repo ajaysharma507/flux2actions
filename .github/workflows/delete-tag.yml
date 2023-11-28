@@ -37,4 +37,4 @@ jobs:
           fi
         done
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: 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
