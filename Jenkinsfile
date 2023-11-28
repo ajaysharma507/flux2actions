@@ -1,15 +1,9 @@
 pipeline {
     agent any
-    environment {
-        GIT_REPO_URL = 'https://github.com/ajaysharma507/flux2actions.git'
-    }
     stages {
         stage('Delete Old Tags') {
             steps {
                 script {
-                    // Use the Git plugin to clone the repository
-                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[]]])
-                    // Get a list of all tags
                     def tags = sh(script: 'git tag -l', returnStdout: true).trim().split('\n')
                     // Get the current date
                     def currentDate = new Date()
