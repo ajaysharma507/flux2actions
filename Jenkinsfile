@@ -15,7 +15,9 @@ pipeline {
 
                     for (def tag in tags) {
                         def tagDate = sh(script: "git log -1 --format=%ai ${tag}", returnStdout: true).trim()
-                        if (Date.parse("yyyy-MM-dd HH:mm:ss Z", tagDate) < oldestDate) {
+                        def tagDateParsed = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z").parse(tagDate)
+                        
+                        if (tagDateParsed < oldestDate) {
                             sh "git tag -d ${tag}"
                             sh "git push origin :refs/tags/${tag}"
                             echo "Deleted tag: ${tag}"
