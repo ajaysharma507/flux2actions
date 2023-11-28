@@ -1,14 +1,10 @@
 
-
 pipeline {
     agent any
     
     triggers {
         cron('0 0 * * *') // Run every day at midnight
     }
-
-    import java.text.SimpleDateFormat
-    import java.util.Date
 
     stages {
         stage('Cleanup Tags') {
@@ -20,7 +16,9 @@ pipeline {
 
                     for (def tag in tags) {
                         def tagDate = sh(script: "git log -1 --format=%ai ${tag}", returnStdout: true).trim()
-                        if (Date.parse("yyyy-MM-dd HH:mm:ss Z", tagDate) < oldestDate) {
+                        def tagDateParsed = new Date(tagDate)
+                        
+                        if (tagDateParsed < oldestDate) {
                             sh "git tag -d ${tag}"
                             sh "git push origin :refs/tags/${tag}"
                             echo "Deleted tag: ${tag}"
@@ -30,23 +28,5 @@ pipeline {
             }
         }
 
-        stage('Cleanup Branches') {
-            steps {
-                script {
-                    def oldestDate = new Date() - 60
-                    def branches = sh(script: "git for-each-ref --sort=-committerdate refs/heads/ --format='%(refname:short) %(committerdate:short)'", returnStdout: true).trim().split('\n')
-
-                    for (def branch in branches) {
-                        def branchName = branch.split()[0]
-                        def branchDate = branch.split()[1]
-                        if (Date.parse("yyyy-MM-dd", branchDate) < oldestDate) {
-                            sh "git branch -D ${branchName}"
-                            sh "git push origin --delete ${branchName}"
-                            echo "Deleted branch: ${branchName}"
-                        }
-                    }
-                }
-            }
-        }
     }
 }
