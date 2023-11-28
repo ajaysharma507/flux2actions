@@ -1,5 +1,4 @@
-import java.text.SimpleDateFormat
-import java.util.Date
+
 
 pipeline {
     agent any
@@ -7,6 +6,9 @@ pipeline {
     triggers {
         cron('0 0 * * *') // Run every day at midnight
     }
+
+    import java.text.SimpleDateFormat
+    import java.util.Date
 
     stages {
         stage('Cleanup Tags') {
