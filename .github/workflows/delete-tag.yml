@@ -21,22 +21,25 @@ jobs:
 
     - name: Delete old tags
       run: |
-        # Set the date 60 days ago
-        OLDEST_DATE=$(date -d "60 days ago" +%Y-%m-%d)
-        echo $OLDEST_DATE
+        # # Set the date 60 days ago
+        # OLDEST_DATE=$(date -d "60 days ago" +%Y-%m-%d)
+        # echo $OLDEST_DATE
         
-        # List all tags
-        TAGS=$(git tag -l)
-        echo $TAGS
+        # # List all tags
+        # TAGS=$(git tag -l)
+        # echo $TAGS
 
-        # Loop through tags and delete those older than 60 days
-        for TAG in $TAGS; do
-          TAG_DATE=$(git log -1 --format=%ai $TAG)
-          if [[ "$TAG_DATE" < "$OLDEST_DATE" ]]; then
-            git tag -d $TAG
-            git push origin :refs/tags/$TAG
-            echo "Deleted tag: $TAG"
-          fi
-        done
+        # # Loop through tags and delete those older than 60 days
+        # for TAG in $TAGS; do
+        #   TAG_DATE=$(git log -1 --format=%ai $TAG)
+        #   if [[ "$TAG_DATE" < "$OLDEST_DATE" ]]; then
+        #     git tag -d $TAG
+        #     git push origin :refs/tags/$TAG
+        #     echo "Deleted tag: $TAG"
+        #   fi
+        # done
+        git rev-parse HEAD
+        git branch
+        git tag -l
       env:
         GITHUB_TOKEN: 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
