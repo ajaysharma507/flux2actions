@@ -7,8 +7,8 @@ pipeline {
         stage('Delete Old Tags') {
             steps {
                 script {
-                    // Clone the Git repository
-                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], credentialsId: '377f8df0-2d19-450e-a33c-b11da6de3837', url: GIT_REPO_URL])
+                    // Use the Git plugin to clone the repository
+                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: GIT_REPO_URL]]])
                     // Get a list of all tags
                     def tags = sh(script: 'git tag -l', returnStdout: true).trim().split('\n')
                     // Get the current date
