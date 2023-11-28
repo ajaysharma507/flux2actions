@@ -1,32 +1,27 @@
-
 pipeline {
     agent any
     
-    triggers {
-        cron('0 0 * * *') // Run every day at midnight
-    }
-
     stages {
-        stage('Cleanup Tags') {
+        stage('Delete Old Tags') {
             steps {
                 script {
-                    def oldestDate = new Date() - 60
-                    sh "git fetch --tags"
-                    def tags = sh(script: 'git tag -l', returnStdout: true).trim().split('\n')
 
-                    for (def tag in tags) {
-                        def tagDate = sh(script: "git log -1 --format=%ai ${tag}", returnStdout: true).trim()
-                        def tagDateParsed = new Date(tagDate)
-                        
-                        if (tagDateParsed < oldestDate) {
-                            sh "git tag -d ${tag}"
-                            sh "git push origin :refs/tags/${tag}"
-                            echo "Deleted tag: ${tag}"
-                        }
-                    }
+                        // Get a list of all tags
+                        def tags = sh(script: 'git tag -l', returnStdout: true).trim().split('\n')
+                        // Get the current date
+                        def currentDate = new Date()
+                        // Iterate through each tag and delete tags older than 60 days
+                        tags.each { tag ->
+                            def tagDate = sh(script: "git log -1 --format=%ai ${tag}", returnStdout: true).trim()
+                            def daysDifference = currentDate - Date.parse("yyyy-MM-dd HH:mm:ss Z", tagDate)
+                            def days = daysDifference.toDays()
+                            if (days > 60) {
+                                echo "Deleting old tag: ${tag}"
+                                sh "git tag -d ${tag}"
+                                sh "git push origin :refs/tags/${tag}"
+
                 }
             }
         }
-
     }
 }
