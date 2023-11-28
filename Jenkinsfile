@@ -7,9 +7,6 @@ pipeline {
         stage('Delete Old Tags') {
             steps {
                 script {
-                    // Clone the Git repository
-                    checkout([$class: 'Git', branches: [[name: '*/master']], credentialsId: 'your-git-credentials-id', url: GIT_REPO_URL])
-                    // Get a list of all tags
                     def tags = sh(script: 'git tag -l', returnStdout: true).trim().split('\n')
                     // Get the current date
                     def currentDate = new Date()
