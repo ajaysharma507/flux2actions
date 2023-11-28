@@ -1,1 +1,40 @@
+name: Delete Old Tags
 
+# on:
+#   schedule:
+#     - cron: '0 0 * * *'  # Run every day at midnight
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual run'
+        required: true
+
+jobs:
+  delete_old_tags:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Delete old tags
+      run: |
+        # Set the date 60 days ago
+        OLDEST_DATE=$(date -d "60 days ago" +%Y-%m-%d)
+        
+        # List all tags
+        TAGS=$(git tag -l)
+
+        # Loop through tags and delete those older than 60 days
+        for TAG in $TAGS; do
+          TAG_DATE=$(git log -1 --format=%ai $TAG)
+          if [[ "$TAG_DATE" < "$OLDEST_DATE" ]]; then
+            git tag -d $TAG
+            git push origin :refs/tags/$TAG
+            echo "Deleted tag: $TAG"
+          fi
+        done
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
