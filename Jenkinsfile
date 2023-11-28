@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        GIT_REPO_URL = 'https://github.com/ajaysharma507/flux2actions.git'
+        GIT_REPO_URL = 'https://your.git.repo/url.git'
     }
     stages {
         stage('Delete Old Tags') {
@@ -13,7 +13,11 @@ pipeline {
                     // Iterate through each tag and delete tags older than 60 days
                     tags.each { tag ->
                         def tagDate = sh(script: "git log -1 --format=%ai ${tag}", returnStdout: true).trim()
-                        def daysDifference = currentDate - Date.parse("yyyy-MM-dd HH:mm:ss Z", tagDate)
+                        // Parse the date using SimpleDateFormat
+                        def dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z")
+                        def dateObj = dateFormat.parse(tagDate)
+                        // Calculate the days difference
+                        def daysDifference = currentDate - dateObj
                         def days = daysDifference.toDays()
                         if (days > 60) {
                             echo "Deleting old tag: ${tag}"
@@ -26,3 +30,10 @@ pipeline {
         }
     }
 }
+
+
+
+
+
+
+
