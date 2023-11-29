@@ -1,14 +1,10 @@
 pipeline {
     agent any
-    environment {
-        GIT_REPO_URL = 'https://github.com/ajaysharma507/flux2actions.git'
-        GIT_CREDENTIALS_ID = '377f8df0-2d19-450e-a33c-b11da6de3837'  
-    }
+
     stages {
         stage('Delete Old Tags') {
             steps {
                 script {
-                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: GIT_REPO_URL, credentialsId: GIT_CREDENTIALS_ID]]])
                     def tags = sh(script: 'git tag -l', returnStdout: true).trim().split('\n')
                     // Get the current date
                     def currentDate = new Date()
@@ -22,8 +18,8 @@ pipeline {
                         def daysDifference = (currentDate.time - tagDateTime.time) / (1000 * 60 * 60 * 24)
                         if (daysDifference > 60) {
                             echo "Deleting old tag: ${tag}"
-                            sh "git tag -d ${tag}"
-                            sh "git push origin :refs/tags/${tag}"
+                            // sh "git tag -d ${tag}"
+                            // sh "git push origin :refs/tags/${tag}"
                         }
                     }
                 }
