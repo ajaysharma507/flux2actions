@@ -22,8 +22,8 @@ pipeline {
                         def daysDifference = (currentDate.time - tagDateTime.time) / (1000 * 60 * 60 * 24)
                         if (daysDifference > 60) {
                             echo "Deleting old tag: ${tag}"
-                            // sh "git tag -d ${tag}"
-                            // sh "git push origin :refs/tags/${tag}"
+                            sh "git tag -d ${tag}"
+                            sh "git push origin :refs/tags/${tag}"
                         }
                     }
                 }
