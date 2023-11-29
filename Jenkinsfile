@@ -1,8 +1,18 @@
 pipeline {
     agent any
 
+    parameters {
+        booleanParam(name: 'DELETE_OLD_TAGS', defaultValue: true, description: 'Delete old tags')
+        booleanParam(name: 'DELETE_STALE_BRANCHES', defaultValue: true, description: 'Delete stale branches')
+    }
+
     stages {
         stage('Delete Old Tags') {
+
+            when {
+                expression { params.DELETE_OLD_TAGS }
+            }
+            
             steps {
                 script {
                     def tags = sh(script: 'git tag -l', returnStdout: true).trim().split('\n')
@@ -26,6 +36,11 @@ pipeline {
             }
         }
         stage('Delete Stale Branches') {
+
+            when {
+                expression { params.DELETE_STALE_BRANCHES }
+            }
+            
             steps {
                 script {
 
