@@ -13,7 +13,6 @@ pipeline {
 		timestamps()
 	}
     environment {
-        GIT_TOKEN               = credentials('377f8df0-2d19-450e-a33c-b11da6de3837')
         GIT_ORG                 = 'git@github.com:ajaysharma507'
     }
     stages {
