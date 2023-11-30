@@ -2,9 +2,7 @@ import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 
 pipeline {
-    agent { 
-        label 'any'
-    }
+    agent any
     // triggers {
     //     //Run once a week every Saturday
     // cron('30 0 * * 6')
