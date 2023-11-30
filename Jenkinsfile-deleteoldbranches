@@ -38,7 +38,7 @@ def deleteTags(organization, limit)  {
     // Set the credentials for authenticating with the GitHub API
     def credentials = [
         username: 'ajaysharma507@gmail.com',
-        password: "${GIT_TOKEN}"
+        password: "Employeesupport@5"
     ]
 
     // Set the URL for the GitHub API
@@ -83,7 +83,7 @@ def deleteTags(organization, limit)  {
     json.each { repo ->
         global_prettyPrintWithHeaderAndFooter header: "Looping through git repo", body: "${repo.name}", lineLenght: 20
         def repoUrl = "${GIT_ORG}/${repo.name}.git"
-        checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: "${repoUrl}", credentialsId:'jenkins_ssh_git']]])
+        checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: "${repoUrl}", credentialsId:'377f8df0-2d19-450e-a33c-b11da6de3837']]])
 
         tagsToDelete.each { tagName ->
             sh "git tag -d $tagName"
