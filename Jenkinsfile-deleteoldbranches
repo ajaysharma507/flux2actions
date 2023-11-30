@@ -52,11 +52,14 @@ def deleteTags(organization, limit)  {
     // check tag pattersns with Roy/Dan
     def tagNamePattern = "v*" 
 
-    //list tags to delete
-    def tagsToDelete = sh(script: "git tag -l '$tagNamePattern'", returnStdout: true).trim().split('\n').findAll {
-        def tagDate = sh(script: "git log -n 1 --pretty=format:%ct $it", returnStdout: true).toLong() * 1000
-        return tagDate < sixMonthsAgo.getTime()
-    }
+  // Get current timestamp
+    def currentDate = new Date()
+                    
+    // Calculate timestamp for 6 months ago
+    def sixMonthsAgo = currentDate - (30 * 24 * 60 * 60 * 1000 * 6)
+                    
+    // Get list of tags
+    def tags = sh(script: 'git tag -l', returnStdout: true).trim().split('\n')
 
 
     // Set the authentication headers
@@ -84,10 +87,13 @@ def deleteTags(organization, limit)  {
         def repoUrl = "${GIT_ORG}/${repo.name}.git"
         checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: "${repoUrl}", credentialsId:'377f8df0-2d19-450e-a33c-b11da6de3837']]])
 
-        tagsToDelete.each { tagName ->
-            sh "git tag -d $tagName"
-            sh "git push origin :refs/tags/$tagName"
-            echo "Deleted tag: $tagName"
+    tags.each { tag ->
+        def tagDate = sh(script: "git log -1 --format=%ai ${tag}", returnStdout: true).trim()
+            def parsedTagDate = new Date(tagDate)
+            if (parsedTagDate.before(sixMonthsAgo)) {
+                sh "git tag -d ${tag}"
+                sh "git push origin :refs/tags/${tag}"
+                echo "Deleted old tag: ${tag}"
        }
     }
 }
