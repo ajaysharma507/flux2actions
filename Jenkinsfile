@@ -1,46 +1,32 @@
+@Library('shared-lib@main')_
+import groovy.json.JsonSlurperClassic
+import groovy.json.JsonOutput
+
 pipeline {
     agent any
-
-    parameters {
-        booleanParam(name: 'DELETE_OLD_TAGS', defaultValue: true, description: 'Delete old tags')
-        booleanParam(name: 'DELETE_STALE_BRANCHES', defaultValue: true, description: 'Delete stale branches')
+    
+    // agent { 
+    //     label 'graviton-medium'
+    // }
+    // triggers {
+    //     //Run once a week every Saturday
+    // cron('30 0 * * 6')
+    // }
+    options {
+		buildDiscarder(logRotator(numToKeepStr: '100'))
+		disableConcurrentBuilds()
+		timestamps()
+	}
+    environment {
+        GIT_TOKEN               = credentials('github-pat-jenkins')
+        GIT_ORG                 = 'https://github.com/polarsecurity'
+        GIT_SSH                 = credentials('jenkins_ssh_git')
     }
 
     stages {
-        stage('Delete Old Tags') {
-
-            when {
-                expression { params.DELETE_OLD_TAGS }
-            }
-            
-            steps {
-                script {
-                    def tags = sh(script: 'git tag -l', returnStdout: true).trim().split('\n')
-                    // Get the current date
-                    def currentDate = new Date()
-                    // Iterate through each tag and delete tags older than 60 days
-                    tags.each { tag ->
-                        def tagDate = sh(script: "git log -1 --format=%ai ${tag}", returnStdout: true).trim()
-                        // Parse the date using SimpleDateFormat
-                        def dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z")
-                        def tagDateTime = dateFormat.parse(tagDate)
-                        // Calculate the days difference
-                        def daysDifference = (currentDate.time - tagDateTime.time) / (1000 * 60 * 60 * 24)
-                        if (daysDifference > 60) {
-                            echo "Deleting old tag: ${tag}"
-                            // sh "git tag -d ${tag}"
-                            // sh "git push origin :refs/tags/${tag}"
-                        }
-                    }
-                }
-            }
-        }
+        
         stage('Delete Stale Branches') {
 
-            when {
-                expression { params.DELETE_STALE_BRANCHES }
-            }
-            
             steps {
                 script {
 
