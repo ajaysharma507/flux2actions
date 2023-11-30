@@ -51,7 +51,7 @@ def deleteTags(organization, limit)  {
     def currentDate = new Date()
                     
     // Calculate timestamp for 6 months ago
-    def sixMonthsAgo = currentDate - (30 * 24 * 60 * 60 * 1000 * 6)
+   def sixMonthsAgo = new Date() - 183 // 6 months in days
                     
     // Get list of tags
     def tags = sh(script: 'git tag -l', returnStdout: true).trim().split('\n')
