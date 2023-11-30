@@ -46,11 +46,6 @@ def deleteTags(organization, limit)  {
     // Set the URL for the organization's repositories
     def reposUrl = "${apiUrl}/orgs/${organization}/repos"
 
-    // Set the date
-    def sixMonthsAgo = new Date() - 183 // 6 months in days
-
-    // check tag pattersns with Roy/Dan
-    def tagNamePattern = "v*" 
 
   // Get current timestamp
     def currentDate = new Date()
@@ -96,7 +91,7 @@ def deleteTags(organization, limit)  {
                 echo "Deleted old tag: ${tag}"
        }
     }
-}
+  }
 }
 
 
