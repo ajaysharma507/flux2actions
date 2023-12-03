@@ -119,6 +119,6 @@ def deleteStale(organization, limit)  {
                 echo (sixMonthsAgoString)
             }
 
-        }
+         }
     }
 }
