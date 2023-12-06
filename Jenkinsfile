@@ -25,7 +25,7 @@ pipeline {
         stage ('Git backup'){
             steps {
                 script {
-                        echo "Backing up Git repos"
+                        echo "getting Git repo details for stale branches"
                         deleteStale('polarsecurity', 200)
                     }
                 }
@@ -68,9 +68,11 @@ def deleteStale(organization, limit)  {
 
     // Calculate the date six months ago
     def currentTimeMillis = System.currentTimeMillis()
-    def sixMonthsInMillis = 6L * 29 * 24 * 60 * 60 * 1000
+    def sixMonthsInMillis = 6L * 30 * 24 * 60 * 60 * 1000
     def sixMonthsAgo = currentTimeMillis - sixMonthsInMillis
 
+    // Common list of branches to exclude from deletion
+    def ExceptionBranches = /(master|main|dev|polar-api-v.*)/
 
     // Send the API request and store the response
     def response = new URL(reposUrl).getText(requestProperties: authHeaders, query: params)
@@ -78,47 +80,58 @@ def deleteStale(organization, limit)  {
     // Parse the JSON response and print the names of the repositories
     def json = new groovy.json.JsonSlurperClassic().parseText(response)
 
-    json.each { repo ->
-        global_prettyPrintWithHeaderAndFooter header: "Backing up Git repos", body: "${repo.name}", lineLenght: 20
+    json.each { repo ->  dir("${WORKSPACE}/${repo.name}"){
+        global_prettyPrintWithHeaderAndFooter header: "Repo details for stale branches", body: "${repo.name}", lineLenght: 20
         def repoUrl = "git@github.com:polarsecurity/${repo.name}.git"
+	checkout([$class: 'GitSCM', branches: [[name: 'main']], userRemoteConfigs: [[url: "${repoUrl}", credentialsId:'jenkins_ssh_git']]])
 
-	// Initialize variables for pagination
-	def page = 1
-	def branches = []
-	while (true) {
-	// Get branches for the current page
-	def branchesUrl = "https://api.github.com/repos/${organization}/${repo.name}/branches?page=${page}"
-	def branchesResponse = new URL(branchesUrl).getText(requestProperties: authHeaders, query: params)
-        def branchesjson = new groovy.json.JsonSlurperClassic().parseText(branchesResponse)
-	if (branchesjson.size() == 0) {
-		break
+	// Check if the repository is archived
+	if (repo.archived) {
+	    echo "Skipping archived repository ${repo.name}."
+	    return
 	}
-	branches.addAll(branchesjson)
-	page++
-	}
+
+      	// Initialize variables for pagination
+      	def page = 1
+      	def branches = []
+      	while (true) {
+        	// Get branches for the current page
+        	def branchesUrl = "https://api.github.com/repos/${organization}/${repo.name}/branches?page=${page}"
+        	def branchesResponse = new URL(branchesUrl).getText(requestProperties: authHeaders, query: params)
+	        def branchesjson = new groovy.json.JsonSlurperClassic().parseText(branchesResponse)
+          	if (branchesjson.size() == 0) {
+          		break
+          	}
+        	branches.addAll(branchesjson)
+        	page++
+      	}
 
         // Iterate over each branch and delete if it's older than the threshold
-         branches.each { branch ->
+         branches.each { branch -> 
 
-         def lastCommitUrl = "https://api.github.com/repos/${organization}/${repo.name}/commits/${branch.commit.sha}"
-         def lastCommitResponse = new URL(lastCommitUrl).getText(requestProperties: authHeaders, query: params)
-         def lastCommit = new groovy.json.JsonSlurperClassic().parseText(lastCommitResponse)
+           def lastCommitUrl = "https://api.github.com/repos/${organization}/${repo.name}/commits/${branch.commit.sha}"
+           def lastCommitResponse = new URL(lastCommitUrl).getText(requestProperties: authHeaders, query: params)
+           def lastCommit = new groovy.json.JsonSlurperClassic().parseText(lastCommitResponse)
 
-	  // Extract the committer and date from the last commit
-	  def commitCommitter = lastCommit.commit.committer
-	  def dateString = commitCommitter ? commitCommitter.date : null
-	  // Use SimpleDateFormat to parse the date string
-	  def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
-	  def branchDate = dateString ? sdf.parse(dateString)?.time : null
+           // Extract the committer and date from the last commit
+           def commitCommitter = lastCommit.commit.committer
+           def dateString = commitCommitter ? commitCommitter.date : null
+           // Use SimpleDateFormat to parse the date string
+           def sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+           def branchDate = dateString ? sdf.parse(dateString)?.time : null
 
-	    if (branchDate != null && branchDate < sixMonthsAgo) {
-	        // Convert the Date object to a string for echo
-	        def branchDateString = sdf.format(branchDate)
-	        echo "Deleted branch ${branch.name} from ${repo.name}. Last commit date: ${branchDateString}"
-                def sixMonthsAgoString = sdf.format(sixMonthsAgo)
-                echo (sixMonthsAgoString)
-            }
-
-         }
-    }
+  
+      	   if (branchDate != null && branchDate < sixMonthsAgo && !(branch.name ==~ ExceptionBranches)) {
+	      	// Convert the Date object to a string for echo
+	      	def branchDateString = sdf.format(branchDate)
+	      	echo "Branch ${branch.name} from ${repo.name}. Last commit date: ${branchDateString}, Selected for deletion"
+	        //def sixMonthsAgoString = sdf.format(sixMonthsAgo)
+                withCredentials([usernamePassword(credentialsId: 'polardev-jenkins-integration', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                GIT_URL= "github.com/polarsecurity/${repo.name}.git"
+                //sh "git push https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_URL} -d ${branch.name}"
+                }
+	     }
+          } 
+      }
+   }
 }
