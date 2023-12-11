@@ -22,3 +22,12 @@ def call(Map config = [:]) {
         sh("git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/polarsecurity/${gitRepo}.git --tags")
     }                   
 }
+
+
+   sh '''
+      { set +x; } 2>/dev/null
+		curl --silent --request DELETE "https://api.github.com/repos/polarsecurity/polarsecurity-githubactions-test/git/refs/heads/test123" \
+		--header "Accept: application/vnd.github+json" \
+		--header "Authorization: token $GIT_TOKEN"
+    '''
+	      	echo "Deleted, Branch test123 from polarsecurity-githubactions-test"
